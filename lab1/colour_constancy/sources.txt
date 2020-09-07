@@ -1,0 +1,10 @@
+Helpful sources for ex. 4:
+
+https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1036047&casa_token=odGbG2uHsSUAAAAA:qbeZaBIYiUso4L-sTAaZISEIW2avjBNMVyP2sK99T4v22hxzEfrV0y8fxXUK3imyUILOwsf-&tag=1
+
+https://pdfs.semanticscholar.org/acf3/6cdadfec869f136602ea41cad8b07e3f8ddb.pdf
+
+https://github.com/tsoonjin/visionx/blob/master/scripts/prototype.py#L74-L83
+
+
+https://gist.github.com/shunsukeaihara/4603234
