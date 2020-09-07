@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 
 def estimate_alb_nrm( image_stack, scriptV, shadow_trick=True):
@@ -30,6 +31,15 @@ def estimate_alb_nrm( image_stack, scriptV, shadow_trick=True):
         albedo at this point is |g|
         normal at this point is g / |g|
     """
+    for j, k in itertools.product(range(h), range(w)):
+        i = image_stack[j, k]
+        if shadow_trick:
+            scriptI = np.diag(i)
+        else:
+            scriptI = np.eye(len(i))
+        g, _, _, _ = np.linalg.lstsq(scriptI @ scriptV, scriptI @ i, rcond=None)
+        albedo[j, k] = np.linalg.norm(g)
+        normal[j, k] = g / albedo[j, k]
     
     return albedo, normal
     

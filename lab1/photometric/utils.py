@@ -5,10 +5,11 @@ import cv2
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def load_syn_images(image_dir='./SphereGray5/', channel=0):
+def load_syn_images(image_dir='./SphereGray5/', nfiles=None, channel=0):
     files = os.listdir(image_dir)
     #files = [os.path.join(image_dir, f) for f in files]
-    nfiles = len(files)
+    if nfiles is None:
+        nfiles = len(files)
     
     image_stack = None
     V = 0
