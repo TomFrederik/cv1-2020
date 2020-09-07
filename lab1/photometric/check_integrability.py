@@ -21,6 +21,8 @@ def check_integrability(normals):
     q measures value of df / dy
     
     """
+    p = normals[:, :, 0] / normals[:, :, 2]
+    q = normals[:, :, 1] / normals[:, :, 2]
     
     # change nan to 0
     p[p!=p] = 0
@@ -34,6 +36,18 @@ def check_integrability(normals):
     and compute the Squared Errors SE of the 2 second derivatives SE
     
     """
+    # calculate dp/dy and dq/dx
+    # we pad with zeros because show_results expects SE to have the same shape as p and q
+    delta_p = np.concatenate([
+        np.diff(p, axis=1),
+        np.zeros((p.shape[0], 1))
+    ], axis=1)
+    delta_q = np.concatenate([
+        np.diff(q, axis=0),
+        np.zeros((1, q.shape[1]))
+    ], axis=0)
+
+    SE = (delta_p - delta_q)**2
     
     return p, q, SE
 
