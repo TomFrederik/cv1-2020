@@ -29,6 +29,23 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None):
     print('Number of outliers: %d\n' % np.sum(SE > threshold))
     SE[SE <= threshold] = float('nan') # for good visualization
 
+
+    ## remove this before submitting!
+    '''
+    # plotting the gradients as quiver
+    stride = 20
+    fig, ax = plt.subplots()
+    #ax = fig.gca(projection='3d')
+    X, Y = np.meshgrid(np.arange(0,np.shape(q)[0], stride),
+                        np.arange(0,np.shape(q)[1], stride))
+    # getting coordinates for q and p
+    q_coord = q[X,Y]
+    p_coord = p[X,Y]
+    # plot
+    ax.quiver(X, Y, q_coord, p_coord)
+    plt.show()
+    '''
+
     # compute the surface height
     print('Computing the height map...')
     height_map = construct_surface( p, q,'average' )
@@ -60,5 +77,5 @@ def photometric_stereo_face(image_dir='./yaleB02/'):
     show_results(albedo, normals, height_map, SE)
     
 if __name__ == '__main__':
-    photometric_stereo('./photometrics_images/SphereGray25/')
+    photometric_stereo('/home/tom/Desktop/Getting Things Done/Projects/UvA_Period_1_1/CV_1/cv1_assignment_repo/lab1/photometric/photometrics_images/SphereGray25/')
     #photometric_stereo_face()

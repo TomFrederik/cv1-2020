@@ -115,7 +115,7 @@ def show_results(albedo, normals, height_map, SE):
     You could further inspect the shape of the objects and normal directions by using plt.quiver() function.  
     =============
     '''
-    
+
     # plotting the SE
     H = SE[::stride,::stride]
     fig = plt.figure()
@@ -128,5 +128,8 @@ def show_results(albedo, normals, height_map, SE):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
+    #### CHANGED CODE ####
+    ax.set_zlim(0,512)
+    ######################
     plt.show()
 
