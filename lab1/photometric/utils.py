@@ -129,7 +129,8 @@ def show_results(albedo, normals, height_map, SE):
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
     #### CHANGED CODE ####
-    ax.set_zlim(0,512)
+    # rescaling
+    #ax.set_zlim(0,512)
     ######################
     plt.show()
 
