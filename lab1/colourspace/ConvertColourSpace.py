@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import rgbConversions
 from visualize import *
+import sys
+from getColourChannels import getColourChannels
 
 def ConvertColourSpace(input_image, colourspace):
     '''
@@ -30,12 +32,16 @@ def ConvertColourSpace(input_image, colourspace):
         new_image = rgbConversions.rgb2normedrgb(input_image)
 
     elif colourspace.lower() == 'hsv':
-        # use built-in function from opencv
-        pass
+        new_image = cv2.cvtColor(input_image, cv2.COLOR_RGB2HSV)
 
     elif colourspace.lower() == 'ycbcr':
-        # use built-in function from opencv
-        pass
+        new_image = cv2.cvtColor(input_image, cv2.COLOR_RGB2YCrCb)
+        Cr=np.array(new_image[:, :, 1])
+        Cb=np.array(new_image[:, :, 2])
+        new_image[:, :, 1]=Cb
+        new_image[:, :, 2]=Cr
+
+
 
     elif colourspace.lower() == 'gray':
         # fill in the rgb2opponent function
@@ -58,5 +64,6 @@ if __name__ == '__main__':
     # Convert from BGR to RGB
     # This is a shorthand.
     I = I[:, :, ::-1]
-
-    out_img = ConvertColourSpace(I, 'opponent.png')
+    #run for example "python ConvertColourSpace.py gray" to run with colourspace
+    #set to gray
+    out_img = ConvertColourSpace(I, sys.argv[1])
