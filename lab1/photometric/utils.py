@@ -80,7 +80,7 @@ def load_face_images(image_dir='./yaleB02/'):
     return image_stack, scriptV
     
     
-def show_results(albedo, normals, height_map, SE):
+def show_results(albedo, normals, height_map, SE, n):
     # Stride in the plot, you may want to adjust it to different images
     stride = 1
     
@@ -91,7 +91,8 @@ def show_results(albedo, normals, height_map, SE):
     albedo = albedo / albedo_max
     print(albedo.shape)
     plt.imshow(albedo, cmap="gray")
-    plt.show()
+    #plt.show()
+    plt.savefig('./monkey_gray_results/albedo_{}.pdf'.format(n))
     
     # showing normals as three separate channels
     figure = plt.figure()
@@ -101,8 +102,9 @@ def show_results(albedo, normals, height_map, SE):
     ax2.imshow(normals[..., 1])
     ax3 = figure.add_subplot(133)
     ax3.imshow(normals[..., 2])
-    plt.show()
-    
+    #plt.show()
+    plt.savefig('./monkey_gray_results/normals_{}.pdf'.format(n))
+
     # meshgrid
     X, Y, _ = np.meshgrid(np.arange(0,np.shape(normals)[0], stride),
     np.arange(0,np.shape(normals)[1], stride),
@@ -121,8 +123,9 @@ def show_results(albedo, normals, height_map, SE):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
-    plt.show()
-    
+    #plt.show()
+    plt.savefig('./monkey_gray_results/SE_{}.pdf'.format(n))
+
     # plotting model geometry
     H = height_map[::stride,::stride]
     fig = plt.figure()
@@ -132,5 +135,5 @@ def show_results(albedo, normals, height_map, SE):
     # rescaling
     #ax.set_zlim(0,512)
     ######################
-    plt.show()
-
+    #plt.show()
+    plt.savefig('./monkey_gray_results/height_map_{}.pdf'.format(n))
