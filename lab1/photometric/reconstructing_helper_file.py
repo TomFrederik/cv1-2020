@@ -5,7 +5,11 @@ dir = '/home/tom/Desktop/Getting Things Done/Projects/UvA_Period_1_1/CV_1/cv1_as
 
 
 # for 5 images
-ps.photometric_stereo(dir + '/photometrics_images/SphereGray5/')
+#ps.photometric_stereo(dir + '/photometrics_images/SphereGray5/')
 
 # for 25 images
-ps.photometric_stereo(dir + '/photometrics_images/SphereGray25/')
+#ps.photometric_stereo(dir + '/photometrics_images/SphereGray25/')
+
+
+# for color
+ps.photometric_stereo(dir + '/photometrics_images/SphereColor/', color=True)

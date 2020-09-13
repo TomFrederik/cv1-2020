@@ -12,22 +12,30 @@ print('Part 1: Photometric Stereo\n')
 def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, shadow_trick=True):
 
     if color:
-        print('Loading images...\n')
-        [image_stack, scriptV] = load_syn_images(image_dir, nfiles)
-        [h, w, _, n] = image_stack.shape
-        print('Finish loading %d images.\n' % n)
-
-        colors = ['R', 'G', 'B']
-        height_maps = default_dict(float)
-        albedos = default_dict(float)
-        SEs = default_dict(float)
-        normals_dict = default_dict(float)
         
-        for i in range(3):
+        colors = ['R', 'G', 'B']
+        height_maps = defaultdict(float)
+        albedos = defaultdict(float)
+        SEs = defaultdict(float)
+        normals_dict = defaultdict(float)
+        not_ignore = defaultdict(float)
 
+        for i in range(3):
+            print('Loading images for {} channel\n'.format(colors[i]))
+            [image_stack, scriptV] = load_syn_images(image_dir, nfiles, channel=i)
+            [h, w, n] = image_stack.shape
+            print('Finish loading %d images.\n' % n)
+    
+            if not shadow_trick:
+                raise Warning('Shadow-trick disabled. This is recommended for RGB images!')
+            
+            # save pixel indices that are zero for all images in this channel. They will be ignored
+            # when averaging the height map
+            not_ignore[colors[i]] = np.sum(image_stack, axis=-1) != 0
+            print(not_ignore[colors[i]].shape)
             # compute the surface gradient from the stack of imgs and light source mat
             print('Computing surface albedo and normal map...\n')
-            [albedo, normals] = estimate_alb_nrm(image_stack[:,:,i,:], scriptV, shadow_trick=shadow_trick)
+            [albedo, normals] = estimate_alb_nrm(image_stack, scriptV, shadow_trick=shadow_trick)
 
             # integrability check: is (dp / dy  -  dq / dx) ^ 2 small everywhere?
             print('Integrability checking\n')
@@ -47,11 +55,30 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
             SEs[colors[i]] = SEs
             normals_dict[colors[i]] = normals
         
-        
         #####
         # NOT SURE HOW TO COMBINE YET
         #####
-
+        # averaging the height maps:
+        height_map = np.zeros_like(height_maps[colors[0]])
+        inc_mean_ctr = np.ones_like(height_map)
+        for i in range(3):
+            height_map[not_ignore[colors[i]]] += inc_mean_ctr[not_ignore[colors[i]]] \
+                                                * (height_maps[colors[i]][not_ignore[colors[i]]] \
+                                                  - height_map[not_ignore[colors[i]]])
+            inc_mean_ctr[not_ignore[colors[i]]] += 1
+        
+        # plotting the height map
+        stride = 1
+        X, Y = np.meshgrid(np.arange(0,np.shape(normals_dict[colors[0]])[0], stride),
+        np.arange(0,np.shape(normals_dict[colors[0]])[1], stride))
+    
+        
+        H = height_map[::stride,::stride]
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.plot_surface(X, Y, H.T)
+        ax.set_zlim(bottom=0,top=512)
+        plt.savefig('./reconstruction_results/SphereColor_height.pdf')
         
         
     else:
