@@ -109,12 +109,12 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
         show_results(albedo, normals, height_map, SE)
 
 ## Face
-def photometric_stereo_face(image_dir='./yaleB02/'):
+def photometric_stereo_face(image_dir='./photometrics_images/yaleB02/'):
     [image_stack, scriptV] = load_face_images(image_dir)
     [h, w, n] = image_stack.shape
     print('Finish loading %d images.\n' % n)
     print('Computing surface albedo and normal map...\n')
-    albedo, normals = estimate_alb_nrm(image_stack, scriptV)
+    albedo, normals = estimate_alb_nrm(image_stack, scriptV, shadow_trick=False)
 
     # integrability check: is (dp / dy  -  dq / dx) ^ 2 small everywhere?
     print('Integrability checking')
@@ -128,7 +128,7 @@ def photometric_stereo_face(image_dir='./yaleB02/'):
     height_map = construct_surface( p, q )
 
     # show results
-    show_results(albedo, normals, height_map, SE)
+    show_results(albedo, normals, height_map, SE, zlim=180)
     
 if __name__ == '__main__':
     photometric_stereo('./photometrics_images/SphereColor/', color=True)
