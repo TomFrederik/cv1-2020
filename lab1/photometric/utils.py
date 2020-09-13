@@ -133,7 +133,7 @@ def show_results(albedo, normals, height_map, SE):
     ax.plot_surface(X,Y, H.T)
     #### CHANGED CODE ####
     # rescaling
-    #ax.set_zlim(0,512)
+    ax.set_zlim(0,512)
     ######################
     plt.show()
     #plt.savefig('./monkey_gray_results/height_map_{}.pdf'.format(n))
