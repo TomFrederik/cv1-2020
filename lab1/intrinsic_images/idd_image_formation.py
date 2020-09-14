@@ -12,15 +12,12 @@ def main():
     # I(x)=R(X) x S(x) for all x in one line
     # divide by 255 to renormalise
     # dividing by 256 gives 0 RMS
-    print(np.max(albedo*shading[...,None])/255)
-    print(np.max(albedo*shading[...,None])/256)
-    print(np.max(albedo))
-    print(np.max(shading))
     reconstruction_255 = np.array(albedo*shading[:,:,None]/255,dtype="int32")
     reconstruction_256 = np.array(albedo*shading[:,:,None]/256,dtype="int32")
     print('RMS_255 = {0:1.4f}'.format(np.sqrt(np.mean((reconstruction_255-original)**2))))
     print('RMS_256 = {0:1.4f}'.format(np.sqrt(np.mean((reconstruction_256-original)**2))))
 
+    # plotting
     fig = plt.figure()
     plt.subplot(2, 2, 1)
     plt.imshow(original)
@@ -35,7 +32,7 @@ def main():
     plt.title('Albedo')
     plt.subplot(2, 2, 4)
     plt.imshow(reconstruction_255)
-    plt.title('Reconstruction')
+    plt.title('Reconstruction')    
     plt.savefig('image_reconstruction.pdf')
 
 if __name__ == "__main__":
