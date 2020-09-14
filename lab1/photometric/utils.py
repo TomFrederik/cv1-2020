@@ -80,7 +80,7 @@ def load_face_images(image_dir='./yaleB02/'):
     return image_stack, scriptV
     
     
-def show_results(albedo, normals, height_map, SE):
+def show_results(albedo, normals, height_map, SE, zlim=512):
     # Stride in the plot, you may want to adjust it to different images
     stride = 1
     
@@ -133,7 +133,7 @@ def show_results(albedo, normals, height_map, SE):
     ax.plot_surface(X,Y, H.T)
     #### CHANGED CODE ####
     # rescaling
-    ax.set_zlim(0,512)
+    ax.set_zlim(0,zlim)
     ######################
     plt.show()
     #plt.savefig('./monkey_gray_results/height_map_{}.pdf'.format(n))
