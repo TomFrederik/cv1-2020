@@ -64,6 +64,14 @@ if __name__ == '__main__':
     # Convert from BGR to RGB
     # This is a shorthand.
     I = I[:, :, ::-1]
-    #run for example "python ConvertColourSpace.py gray" to run with colourspace
-    #set to gray
-    out_img = ConvertColourSpace(I, sys.argv[1])
+
+    #Convert test image to Opponent Colour Space
+    out_img_opponent = ConvertColourSpace(I, 'opponent')
+    #Convert test image to Normalised RGB Colour Space
+    out_img_normrgb = ConvertColourSpace(I, 'rgb')
+    #Convert test image to HSV Colour Space
+    out_img_hsv = ConvertColourSpace(I, 'hsv')
+    #Convert test image to YCbCr Colour Space
+    out_img_ycbcr = ConvertColourSpace(I, 'ycbcr')
+    #Convert test image to Grayscale Colour Space
+    out_img_gray = ConvertColourSpace(I, 'gray')

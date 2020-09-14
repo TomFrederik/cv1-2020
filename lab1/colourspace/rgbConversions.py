@@ -23,6 +23,7 @@ def rgb2opponent(input_image):
     # converts an RGB image into opponent colour space
     new_image=np.array(input_image)
     colourchannels = getColourChannels(new_image)
+    #here we simply apply the formula that is given in the assignment per channel
     input_image[:, :, 0] = (colourchannels[0]-colourchannels[1])/np.sqrt(2)
     input_image[:, :, 1] = (colourchannels[0]+colourchannels[1]-2*colourchannels[2])/np.sqrt(6)
     input_image[:, :, 2] = (colourchannels[0]+colourchannels[1]+colourchannels[2])/np.sqrt(3)
@@ -35,6 +36,7 @@ def rgb2normedrgb(input_image):
     new_image=np.array(input_image)
     colourchannels = getColourChannels(new_image)
     denominator = colourchannels[0]+colourchannels[1]+colourchannels[2]
+    #here we simply apply the formula that is given in the assignment per channel
     input_image[:, :, 0] = colourchannels[0]/denominator
     input_image[:, :, 1] = colourchannels[1]/denominator
     input_image[:, :, 2] = colourchannels[2]/denominator
