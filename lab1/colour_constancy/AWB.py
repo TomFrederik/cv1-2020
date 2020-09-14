@@ -26,11 +26,13 @@ def grey_world(image):
     # correct image by dividing out the illuminant coefficients
     corrected_im = image / coeffs[None, None, :]
 
-    # clip from 0 to 255 OR rescale by multiplying with max/255
+    # clip from 0 to 255 OR rescale by multiplying with max/255 OR rescale channelwise
     clip_im = np.clip(corrected_im, 0, 255).astype(np.uint8)
     rescaled_im = (corrected_im / np.max(corrected_im) * 255).astype(np.uint8)
+    rescaled_channel_im = (corrected_im / np.max(corrected_im, axis=(0,1)) * 255).astype(np.uint8)
+
     
-    return clip_im, rescaled_im
+    return clip_im, rescaled_im, rescaled_channel_im
 
 
 
@@ -45,12 +47,14 @@ if __name__ == "__main__":
     # load image and convert to numpy array of shape (320,256,3)
     image = Image.open(file_path)
     array_im = np.asarray(image)
-    clip_arr, rescale_arr = grey_world(array_im)
+    clip_arr, rescale_arr, rescale_channel_arr = grey_world(array_im)
 
     # convert to PIL images
     clip_im = Image.fromarray(clip_arr)
     rescale_im = Image.fromarray(rescale_arr)
+    rescale_channel_im = Image.fromarray(rescale_arr)
 
     # save images
     clip_im.save(dir_path / 'awb_out_clip.jpg')
     rescale_im.save(dir_path / 'awb_out_rescale.jpg')
+    rescale_channel_im.save(dir_path / 'awb_out_rescale_channel.jpg')
