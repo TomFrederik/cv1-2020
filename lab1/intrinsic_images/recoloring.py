@@ -14,15 +14,15 @@ def main():
     shading = np.expand_dims(shading,-1)
 
     #I(x)=R(X) x S(x) for all x in one line
-    #/255 to renormalise
+    #/256 to renormalise
     reconstruction = np.array(np.multiply(shading,albedogreen)/256,dtype="uint8")
 
 
 
     fig=plt.figure()
-    plt.subplot(2, 2, 1)
+    plt.subplot(1, 2, 1)
     plt.imshow(original)
-    plt.subplot(2, 2, 2)
+    plt.subplot(2, 2, 1)
     plt.imshow(reconstruction)
 
     plt.show()
