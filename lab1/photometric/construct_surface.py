@@ -36,7 +36,7 @@ def construct_surface(p, q, path_type='column'):
         # compute height map (checked against double-loop, produces same result)
         height_map = np.cumsum(np.concatenate((q_cumsum[:,None], p[:,1:]), axis=1), axis=1)
 
-        ## this is the brute force variant:
+        ## this is the brute force variant (we checked that the results are the same)
         '''
         for i in range(h):
             height_map[i,0] = q[i,0]
