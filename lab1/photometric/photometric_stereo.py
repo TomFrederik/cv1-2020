@@ -66,10 +66,8 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
             SEs[colors[i]] = SEs
             normals_dict[colors[i]] = normals
         
-        #####
-        # NOT SURE HOW TO COMBINE YET
-        #####
-        # averaging the height maps:
+        # averaging the height maps. We do so incrementally to avoid having
+        # to know in advance how many non-zero channels there were
         height_map = np.zeros_like(height_maps[colors[0]])
         inc_mean_ctr = np.ones_like(height_map)
         for i in range(3):
@@ -113,11 +111,11 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
 
         # compute the surface height
         print('Computing the height map...')
-        #height_map = construct_surface( p, q,'average' )
+        height_map = construct_surface( p, q,'average' )
 
         # show results
         print('Showing results...')
-        #show_results(albedo, normals, height_map, SE)
+        show_results(albedo, normals, height_map, SE)
 
 ## Face
 def photometric_stereo_face(image_dir='./photometrics_images/yaleB02/'):
@@ -142,5 +140,8 @@ def photometric_stereo_face(image_dir='./photometrics_images/yaleB02/'):
     show_results(albedo, normals, height_map, SE, zlim=180)
     
 if __name__ == '__main__':
+    # use shadow_trick=False to disable shadow trick
+    # use color=False for gray images
+    # use nfiles=15 etc. to limit the number of images to use
     photometric_stereo('./photometrics_images/SphereColor/', color=True)
     #photometric_stereo_face()
