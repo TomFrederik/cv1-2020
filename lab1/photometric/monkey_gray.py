@@ -13,4 +13,4 @@ file = './photometrics_images/MonkeyGray'
 nbr_images = [5,25,45,65,85,105,121]
 
 for n in nbr_images:
-    ps(file, n)
+    ps(file, n, shadow_trick=False)

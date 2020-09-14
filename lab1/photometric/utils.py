@@ -92,7 +92,7 @@ def show_results(albedo, normals, height_map, SE, zlim=512):
     print(albedo.shape)
     plt.imshow(albedo, cmap="gray")
     plt.show()
-    #plt.savefig('./monkey_gray_results_new/albedo_{}.pdf'.format(n))
+    #plt.savefig('./monkey_gray_results_without_trick/albedo_{}.pdf'.format(n))
     
     # showing normals as three separate channels
     figure = plt.figure()
@@ -103,7 +103,7 @@ def show_results(albedo, normals, height_map, SE, zlim=512):
     ax3 = figure.add_subplot(133)
     ax3.imshow(normals[..., 2])
     plt.show()
-    #plt.savefig('./monkey_gray_results_new/normals_{}.pdf'.format(n))
+    #plt.savefig('./monkey_gray_results_without_trick/normals_{}.pdf'.format(n))
 
     # meshgrid
     X, Y, _ = np.meshgrid(np.arange(0,np.shape(normals)[0], stride),
@@ -124,7 +124,7 @@ def show_results(albedo, normals, height_map, SE, zlim=512):
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
     plt.show()
-    #plt.savefig('./monkey_gray_results_new/SE_{}.pdf'.format(n))
+    #plt.savefig('./monkey_gray_results_without_trick/SE_{}.pdf'.format(n))
 
     # plotting model geometry
     H = height_map[::stride,::stride]
@@ -136,4 +136,4 @@ def show_results(albedo, normals, height_map, SE, zlim=512):
     ax.set_zlim(0,zlim)
     ######################
     plt.show()
-    #plt.savefig('./monkey_gray_results_new/height_map_{}.pdf'.format(n))
+    #plt.savefig('./monkey_gray_results_without_trick/height_map_{}.pdf'.format(n))
