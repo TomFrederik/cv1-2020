@@ -47,7 +47,7 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
 
             # compute the surface height
             print('Computing the height map...')
-            height_map = construct_surface( p, q,'average' )
+            height_map = construct_surface( p, q,'average')
 
             # add to the dicts
             height_maps[colors[i]] = height_map
