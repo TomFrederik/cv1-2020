@@ -22,6 +22,17 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
 
         for i in range(3):
             print('Loading images for {} channel\n'.format(colors[i]))
+
+            # Only for monkey, comment out otherwise
+            # The green channel is completely empty which leads to errors
+            # if we don't skip it
+            # if i == 1:
+            #     # just ignore this entire channel, set the height map to dummy values
+            #     # and continue to the next channel
+            #     not_ignore[colors[i]] = np.zeros((512, 512), dtype=bool)
+            #     height_maps[colors[i]] = np.empty((512, 512))
+            #     continue
+
             [image_stack, scriptV] = load_syn_images(image_dir, nfiles, channel=i)
             [h, w, n] = image_stack.shape
             print('Finish loading %d images.\n' % n)
@@ -96,17 +107,17 @@ def photometric_stereo(image_dir='./SphereGray5/', nfiles=None, color=False, sha
         print('Integrability checking\n')
         [p, q, SE] = check_integrability(normals)
 
-        threshold = 0.005;
+        threshold = 1e-3
         print('Number of outliers: %d\n' % np.sum(SE > threshold))
         SE[SE <= threshold] = float('nan') # for good visualization
 
         # compute the surface height
         print('Computing the height map...')
-        height_map = construct_surface( p, q,'average' )
+        #height_map = construct_surface( p, q,'average' )
 
         # show results
         print('Showing results...')
-        show_results(albedo, normals, height_map, SE)
+        #show_results(albedo, normals, height_map, SE)
 
 ## Face
 def photometric_stereo_face(image_dir='./photometrics_images/yaleB02/'):
