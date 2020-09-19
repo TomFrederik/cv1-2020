@@ -23,13 +23,14 @@ if __name__ == "__main__":
     plt.show()
     psnrs = np.zeros((4,3))
 
-    '''
+    
     for i,kernel_size in enumerate([3,5,7]):
         kwargs = {'kernel_size':kernel_size}
 
         print('Denoising salt_pepper image with [{0}x{0}] Box filter..'.format(kernel_size))
         out_im = denoise(sp_img, 'box', **kwargs)
         plt.figure()
+        plt.axis('off')
         plt.imshow(out_im)
         plt.savefig(out_dir + 'box_saltpepper_{}.pdf'.format(kernel_size))
         psnrs[0,i] = myPSNR(img, out_im)
@@ -37,6 +38,7 @@ if __name__ == "__main__":
         print('Denoising gaussian image with [{0}x{0}] Box filter..'.format(kernel_size))
         out_im = denoise(gauss_img, 'box', **kwargs)
         plt.figure()
+        plt.axis('off')
         plt.imshow(out_im)
         plt.savefig(out_dir + 'box_gaussian_{}.pdf'.format(kernel_size))
         psnrs[1,i] = myPSNR(img, out_im)
@@ -44,6 +46,7 @@ if __name__ == "__main__":
         print('Denoising salt_pepper image with [{0}x{0}] Median filter..'.format(kernel_size))
         out_im = denoise(sp_img, 'median', **kwargs)
         plt.figure()
+        plt.axis('off')
         plt.imshow(out_im)
         plt.savefig(out_dir + 'median_saltpepper_{}.pdf'.format(kernel_size))
         psnrs[2,i] = myPSNR(img, out_im)
@@ -51,6 +54,7 @@ if __name__ == "__main__":
         print('Denoising gaussian image with [{0}x{0}] Median filter..'.format(kernel_size))
         out_im = denoise(gauss_img, 'median', **kwargs)
         plt.figure()
+        plt.axis('off')
         plt.imshow(out_im)
         plt.savefig(out_dir + 'median_gaussian_{}.pdf'.format(kernel_size))
         psnrs[3,i] = myPSNR(img, out_im)
@@ -59,14 +63,13 @@ if __name__ == "__main__":
 
     # write psnrs to file
     file = open(out_dir + 'box_median_psnr.txt', 'w')
-    file.write('kernel_size         =   3   |   5   |   7  \n')
-    file.write('------------------------------------------\n')
-    file.write('PSNR Box (SP)       = {0:1.2f} | {1:1.2f} | {2:1.2f}\n'.format(*tuple([psnrs[0,i] for i in range(3)])))
-    file.write('PSNR Box (Gauss)    = {0:1.2f} | {1:1.2f} | {2:1.2f}\n'.format(*tuple([psnrs[1,i] for i in range(3)])))
-    file.write('PSNR Median (SP)    = {0:1.2f} | {1:1.2f} | {2:1.2f}\n'.format(*tuple([psnrs[2,i] for i in range(3)])))
-    file.write('PSNR Median (Gauss) = {0:1.2f} | {1:1.2f} | {2:1.2f}'.format(*tuple([psnrs[3,i] for i in range(3)])))
+    file.write('kernel_size         &   3   &   5   &   7  \\\\ \n\hline\hline\n')
+    file.write('PSNR Box (SP)       & {0:1.2f} & {1:1.2f} & {2:1.2f}\\\\ \n\hline\n'.format(*tuple([psnrs[0,i] for i in range(3)])))
+    file.write('PSNR Box (Gauss)    & {0:1.2f} & {1:1.2f} & {2:1.2f}\\\\ \n\hline\n'.format(*tuple([psnrs[1,i] for i in range(3)])))
+    file.write('PSNR Median (SP)    & {0:1.2f} & {1:1.2f} & {2:1.2f}\\\\ \n\hline\n'.format(*tuple([psnrs[2,i] for i in range(3)])))
+    file.write('PSNR Median (Gauss) & {0:1.2f} & {1:1.2f} & {2:1.2f}'.format(*tuple([psnrs[3,i] for i in range(3)])))
     file.close() 
-    '''
+    
 
     # denoising gauss noise with gaussian
     
@@ -84,6 +87,7 @@ if __name__ == "__main__":
             print('./gaussian_results/gaussian_gaussian_ks_{0}_sig_{1:1.1f}.jpg'.format(kernels[i],sigma[j]))
             #cv2.imwrite('./gaussian_results/gaussian_gaussian_ks_{0}_sig_{1:1.1f}.jpg'.format(kernels[i],sigma[j]), out_im)
             plt.figure()
+            plt.axis('off')
             plt.imshow(out_im)
             plt.savefig(out_dir + './gaussian_results/gaussian_gaussian_ks_{0}_sig_{1:1.1f}.pdf'.format(kernels[i],sigma[j]))
             plt.close()
@@ -104,3 +108,4 @@ if __name__ == "__main__":
         file.write('\\\\ \n\hline \n')
     
     file.close()
+    

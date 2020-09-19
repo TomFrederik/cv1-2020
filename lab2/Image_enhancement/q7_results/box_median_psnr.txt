@@ -1,6 +1,9 @@
-kernel_size         =   3   |   5   |   7  
-------------------------------------------
-PSNR Box (SP)       = 23.39 | 22.63 | 21.41
-PSNR Box (Gauss)    = 26.22 | 23.65 | 21.93
-PSNR Median (SP)    = 27.86 | 24.67 | 22.55
-PSNR Median (Gauss) = 25.53 | 23.94 | 22.24
+kernel_size         &   3   &   5   &   7  \\ 
+\hline\hline
+PSNR Box (SP)       & 23.39 & 22.63 & 21.41\\ 
+\hline
+PSNR Box (Gauss)    & 26.22 & 23.65 & 21.93\\ 
+\hline
+PSNR Median (SP)    & 27.86 & 24.67 & 22.55\\ 
+\hline
+PSNR Median (Gauss) & 25.53 & 23.94 & 22.24
