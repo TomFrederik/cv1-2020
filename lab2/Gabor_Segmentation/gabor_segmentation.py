@@ -24,7 +24,7 @@ smoothingFlag = True   #  Set to true to postprocess filter outputs.
 
 # Read image
 if image_id == 'Kobi':
-  img = cv2.imread('./data/kobi.png')
+  img = cv2.imread('./data/kobi_cropped.png')
   img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
   resize_factor = 0.25
 elif image_id == 'Polar':
