@@ -21,6 +21,7 @@ if __name__ == "__main__":
     sp_img = cv2.imread('./images/image1_saltpepper.jpg')
     gauss_img = cv2.imread('./images/image1_gaussian.jpg')
 
+    # plot noisy image
     plt.figure()
     plt.axis('off')
     plt.imshow(gauss_img)
@@ -29,7 +30,7 @@ if __name__ == "__main__":
 
     psnrs = np.zeros((4,3))
 
-    '''
+    # apply different median and box filters and save the results
     for i,kernel_size in enumerate([3,5,7]):
         kwargs = {'kernel_size':kernel_size}
 
@@ -77,8 +78,7 @@ if __name__ == "__main__":
     file.close() 
     
 
-    # denoising gauss noise with gaussian
-    
+    # denoising gauss noise with gaussian of different sizes and STDs
     kernels = np.arange(3,13,2)
     sigma = np.arange(0.1,4.1,0.1)
     gauss_psnr = np.zeros((len(kernels),len(sigma)))
@@ -114,6 +114,6 @@ if __name__ == "__main__":
         file.write('\\\\ \n\hline \n')
     
     file.close()
-    '''
+    
 
     
