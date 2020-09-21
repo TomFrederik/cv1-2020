@@ -1,3 +1,6 @@
+from gauss1D import gauss1D
+import numpy as np
+
 def gauss2D( sigma , kernel_size ):
     ## solution
     # compute 1D filters
@@ -8,4 +11,4 @@ def gauss2D( sigma , kernel_size ):
 	G = np.outer(G_y, G_x)
 	G /= np.sum(G)
 
-    return G
+	return G
