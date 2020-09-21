@@ -1,3 +1,4 @@
+import sys
 import cv2
 import matplotlib.pyplot as plt
 import math
@@ -9,7 +10,8 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = 'SciencePark' # Identifier to switch between input images.
+image_id = sys.argv[1]
+#image_id = 'SciencePark' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -78,7 +80,7 @@ lambdaMax = np.sqrt(abs(numRows)**2 + abs(numCols)**2)
 
 # Specify the carrier wavelengths.  
 # (or the central frequency of the carrier signal, which is 1/lambda)
-n = np.floor(np.log2(lambdaMax/lambdaMin))
+n = np.floor(np.log2(lambdaMax/lambdaMin) / np.log2(2))
 lambdas = 2**np.arange(0, (n-2)+1) * lambdaMin
 
 # Define the set of orientations for the Gaussian envelope.
@@ -87,7 +89,7 @@ orientations = np.arange(0, np.pi+dTheta, dTheta)
 
 # Define the set of sigmas for the Gaussian envelope. Sigma here defines 
 # the standard deviation, or the spread of the Gaussian. 
-sigmas = np.array([1,2])
+sigmas = np.array([1, 2])
 
 # Now you can create the filterbank. We provide you with a Python list
 # called gaborFilterBank in which we will hold the filters and their
@@ -181,7 +183,7 @@ for i, fm in enumerate(featureMaps):
         fig = plt.figure()
 
         ax = fig.add_subplot(1, 1, 1)
-        ax.imshow(mag.astype(np.uint8))    # visualize magnitude
+        ax.imshow(mag)    # visualize magnitude
         title = "Re[h(x,y)], \n lambda = {0:.4f}, \n theta = {1:.4f}, \n sigma = {2:.4f}".format(gaborFilterBank[i]["lmbda"], 
                                                                                                  gaborFilterBank[i]["theta"], 
                                                                                                  gaborFilterBank[i]["sigma"])
@@ -287,9 +289,9 @@ plt.figure()
 plt.title(image_id + " Montage")
 plt.imshow(Aseg1, 'gray', interpolation='none')
 plt.imshow(Aseg2, 'jet',  interpolation='none', alpha=0.7)
-plt.axis("off") 
+plt.axis("off")
 plt.tight_layout()
-plt.savefig("fig/{}_montage.pdf".format(image_id))
+plt.savefig("fig/experiment/{}_montage.pdf".format(image_id))
 plt.show()
 
 
