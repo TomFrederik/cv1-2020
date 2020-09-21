@@ -1,4 +1,3 @@
-import sys
 import cv2
 import matplotlib.pyplot as plt
 import math
@@ -10,8 +9,7 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = sys.argv[1]
-#image_id = 'SciencePark' # Identifier to switch between input images.
+image_id = 'Kobi' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -55,12 +53,12 @@ img = cv2.resize(img, (0,0), fx=resize_factor, fy=resize_factor)
 img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 img = img.astype(np.float32)
 
-# Display image
-# plt.figure()
-# plt.title(f'Input image: {image_id}')
-# plt.imshow(img, cmap="gray")
-# plt.axis("off") 
-# plt.show()
+Display image
+plt.figure()
+plt.title(f'Input image: {image_id}')
+plt.imshow(img, cmap="gray")
+plt.axis("off") 
+plt.show()
 
 # Design array of Gabor Filters
 # In this code section, you will create a Gabor Filterbank. A filterbank is
@@ -80,7 +78,7 @@ lambdaMax = np.sqrt(abs(numRows)**2 + abs(numCols)**2)
 
 # Specify the carrier wavelengths.  
 # (or the central frequency of the carrier signal, which is 1/lambda)
-n = np.floor(np.log2(lambdaMax/lambdaMin) / np.log2(2))
+n = np.floor(np.log2(lambdaMax/lambdaMin))
 lambdas = 2**np.arange(0, (n-2)+1) * lambdaMin
 
 # Define the set of orientations for the Gaussian envelope.
@@ -146,8 +144,8 @@ featureMaps = []
 for gaborFilter in gaborFilterBank:
     # gaborFilter["filterPairs"] has two elements. One is related to the real part 
     # of the Gabor Filter and the other one is the imagineray part.
-    real_out = cv2.filter2D(img, -1, gaborFilter["filterPairs"][:, :, 0]) # \\TODO: filter the grayscale input with real part of the Gabor
-    imag_out = cv2.filter2D(img, -1, gaborFilter["filterPairs"][:, :, 1]) # \\TODO: filter the grayscale input with imaginary part of the Gabor
+    real_out = cv2.filter2D(img, -1, gaborFilter["filterPairs"][:, :, 0], borderType=cv2.BORDER_REFLECT)
+    imag_out = cv2.filter2D(img, -1, gaborFilter["filterPairs"][:, :, 1], borderType=cv2.BORDER_REFLECT)
     featureMaps.append(np.stack((real_out, imag_out), 2))
     
     # Visualize the filter responses if you wish.
@@ -209,8 +207,11 @@ if smoothingFlag:
         # i)  filter the magnitude response with appropriate Gaussian kernels
         # ii) insert the smoothed image into features[:,:,jj]
     #END_FOR
-    kernel = cv2.getGaussianKernel(3, 1)
     for i, fmag in enumerate(featureMags):
+        # Use this version to get the lambda-dependent sigma from the Mathworks Help Center:
+        #s = 0.5 * gaborFilterBank[i]["lmbda"]
+        #kernel = cv2.getGaussianKernel(np.ceil(3 * s).astype(int), s)
+        kernel = cv2.getGaussianKernel(3, 1)
         features[:, :, i] = cv2.filter2D(fmag, -1, kernel)
 else:
     # Don't smooth but just insert magnitude images into the matrix
@@ -218,6 +219,9 @@ else:
     for i, fmag in enumerate(featureMags):
         features[:,:,i] = fmag
 
+# Uncomment to add pixel coordinates as features:
+#Xcoords, Ycoords = np.meshgrid(np.arange(numRows), np.arange(numCols), indexing="ij")
+#features = np.concatenate([features, Xcoords[:, :, None], Ycoords[:, :, None]], axis=-1)
 
 # Reshape the filter outputs (i.e. tensor called features) of size 
 # [numRows, numCols, numFilters] into a matrix of size [numRows*numCols, numFilters]
@@ -233,11 +237,6 @@ features = np.reshape(features, newshape=(numRows * numCols, -1))
 features -= np.mean(features, axis=0)[None]
 features /= np.std(features, axis=0)[None]
 
-# for i in range(features.shape[1]):
-#     plt.imshow(features[:, i].reshape(numRows, numCols))
-#     plt.show()
-
-
 # (Optional) Visualize the saliency map using the first principal component 
 # of the features matrix. It will be useful to diagnose possible problems 
 # with the pipeline and filterbank.
@@ -245,11 +244,11 @@ from sklearn.decomposition import PCA
 transformed_feature = PCA(n_components=1).fit_transform(features) # select the first component
 transformed_feature = np.ascontiguousarray(transformed_feature, dtype=np.float32)
 feature2DImage = np.reshape(transformed_feature,newshape=(numRows,numCols))
-# plt.figure()
-# plt.title(f'Pixel representation projected onto first PC')
-# plt.imshow(feature2DImage, cmap='gray')
-# plt.axis("off") 
-# plt.show()
+plt.figure()
+plt.title(f'Pixel representation projected onto first PC')
+plt.imshow(feature2DImage, cmap='gray')
+plt.axis("off") 
+plt.show()
 
 
 # Apply k-means algorithm to cluster pixels using the data matrix,
@@ -268,11 +267,11 @@ print(f'Clustering completed in {ctime} seconds.')
 # Visualize the clustering by reshaping pixLabels into original grayscale
 # input size [numRows numCols].
 pixLabels = np.reshape(pixLabels, newshape=(numRows, numCols))
-# plt.figure()
-# plt.title(f'Pixel clusters')
-# plt.imshow(pixLabels)
-# plt.axis("off") 
-# plt.show()
+plt.figure()
+plt.title(f'Pixel clusters')
+plt.imshow(pixLabels)
+plt.axis("off") 
+plt.show()
 
 
 
@@ -280,10 +279,11 @@ pixLabels = np.reshape(pixLabels, newshape=(numRows, numCols))
 Aseg1 = np.zeros_like(img)
 Aseg2 = np.zeros_like(img)
 BW = pixLabels == 1
+# foreground usually has fewer pixels, make sure that's colored
+if np.sum(BW) > np.sum(~BW):
+    BW = ~BW
 Aseg1 = np.ma.array(img, mask=BW)
 Aseg2 = np.ma.array(img, mask=~BW)
-# Aseg1[BW] = img[BW]
-# Aseg2[~BW] = img[~BW]
 
 plt.figure()
 plt.title(image_id + " Montage")
@@ -291,7 +291,7 @@ plt.imshow(Aseg1, 'gray', interpolation='none')
 plt.imshow(Aseg2, 'jet',  interpolation='none', alpha=0.7)
 plt.axis("off")
 plt.tight_layout()
-plt.savefig("fig/experiment/{}_montage.pdf".format(image_id))
+plt.savefig("fig/{}_montage.pdf".format(image_id))
 plt.show()
 
 
