@@ -12,8 +12,6 @@ def compute_gradient(image):
     im_magnitude = np.sqrt(Gx**2 + Gy**2)
     im_direction = np.arctan(Gy/Gx)
 
-    print(image.shape)
-    print(Gx.shape)
     fig=plt.figure()
     plt.subplot(2, 3, 1)
     plt.imshow(image,cmap='gray')
