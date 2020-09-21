@@ -20,10 +20,16 @@ if __name__ == "__main__":
     img = cv2.imread('./images/image1.jpg')
     sp_img = cv2.imread('./images/image1_saltpepper.jpg')
     gauss_img = cv2.imread('./images/image1_gaussian.jpg')
-    plt.show()
+
+    plt.figure()
+    plt.axis('off')
+    plt.imshow(gauss_img)
+    plt.savefig(out_dir + 'gaussian_results/gauss_noisy.pdf')
+    plt.close()
+
     psnrs = np.zeros((4,3))
 
-    
+    '''
     for i,kernel_size in enumerate([3,5,7]):
         kwargs = {'kernel_size':kernel_size}
 
@@ -108,4 +114,6 @@ if __name__ == "__main__":
         file.write('\\\\ \n\hline \n')
     
     file.close()
+    '''
+
     
