@@ -38,17 +38,17 @@ def lucas_kanade(img1, img2, window_size=15):
             x_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]])
             y_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]]).T
 
-            I_x = np.zeros_like(reg2)
-            I_y = np.zeros_like(reg2)
+            I_x = np.zeros_like(reg1)
+            I_y = np.zeros_like(reg1)
 
             if len(reg2.shape) == 3:
                 for i in range(len(reg2.shape)):
-                    I_x[:,:,i] = scs.convolve2d(reg2[:,:,i], x_kernel, 'same')
-                    I_y[:,:,i] = scs.convolve2d(reg2[:,:,i], y_kernel, 'same')
+                    I_x[:,:,i] = scs.convolve2d(reg1[:,:,i], x_kernel, 'same')
+                    I_y[:,:,i] = scs.convolve2d(reg1[:,:,i], y_kernel, 'same')
 
             else:
-                I_x = scs.convolve2d(reg2, x_kernel, 'same')
-                I_y = scs.convolve2d(reg2, y_kernel, 'same')
+                I_x = scs.convolve2d(reg1, x_kernel, 'same')
+                I_y = scs.convolve2d(reg1, y_kernel, 'same')
             
             
             # compute time difference:
@@ -84,9 +84,9 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
 
     # by default an arrow in [1,1] direction will point to the upper right in plt.quiver
     # Our implementation yields arrows that presume to point to the lower right 
-    # so we have to rotate counter-clockwise by 90 degrees, which we achieve with a 
+    # so we have to rotate clockwise by 90 degrees, which we achieve with a 
     # rotation matrix R
-    R = np.array([[0,-1], [1,0]])
+    R = np.array([[0,1], [-1,0]])
     flows = np.einsum('ik,jk',flows,R)
 
     if coarse:
@@ -123,16 +123,18 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
 
     # compute colors
     # colors correspond to angle of arrow in radiants
-    colors = np.arctan2(V, U)
-    norm = mpl.colors.Normalize()
-    norm.autoscale(colors)
+    angles = np.arctan2(V,U)
+
+    #norm = mpl.colors.Normalize()
+    #norm.autoscale(colors)
     colormap = mpl.cm.viridis
 
     # plot results
     plt.figure()
-    plt.gca().invert_yaxis()
-    color = colormap(norm(colors)).reshape((-1, 4))
-    q = plt.quiver(X, Y, U, V, angles='xy', scale_units='xy', color=color, **quiver_kwargs)
+    plt.gca().invert_yaxis() # put origin in top left corner. Does not affect the direction of arrows unless angles='xy'
+    colors = colormap(angles).reshape((-1, 4))
+    q = plt.quiver(X, Y, U, V, angles='uv', scale_units='xy', color=colors, **quiver_kwargs)
+    plt.clim(-np.pi,np.pi)
     plt.colorbar()
     plt.title(plot_title)
     
@@ -143,12 +145,11 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
         plt.savefig('./results/fine_grained/'+result_file)
 
 
-def demo():
+def demo(coarse=True):
 
-    # coarse or fine grained plot?
+    # coarse determines whether we display a coarse or fine-grained plot
     # fine means that we set an arrow at every pixel
     # coarse means we set only one arrow for every window
-    coarse = True
 
     # compute for sphere
     path_1 = './sphere1.ppm'
@@ -162,7 +163,7 @@ def demo():
     sphere_flows = lucas_kanade(img1, img2)
 
     # plot sphere flows
-    quiver_kwargs_sphere = {'scale':0.04, 'minlength':0.2, 'headwidth':1.5}
+    quiver_kwargs_sphere = {'scale':0.04, 'minlength':0.2, 'headwidth':3}
     plot_flows(sphere_flows, coarse=coarse, window_size=15, result_file='./sphere_flow.pdf', quiver_kwargs=quiver_kwargs_sphere, plot_title=r'Sphere - color $\leftrightarrow$ angle in radiants')
 
     #########
@@ -185,4 +186,9 @@ def demo():
 
 
 if __name__ == "__main__":
-    demo()
+
+    # compute for a coarse setting, i.e. one arrow per region
+    demo(True)
+
+    #compute for a fine setting, i.e. one arrow per pixel
+    demo(False)
