@@ -24,23 +24,36 @@ sigma_derivative = 1
 def tagCorners(image,rows,cols):
     """image is expected to be RGB. Red crosses will be placed on the coordinates given by rows and cols"""
 
-    for i in range(7):
-        rowsmin = rows-i*np.ones(len(rows)).astype(int)
-        rowsplus = rows+i*np.ones(len(rows)).astype(int)
-        colsmin = cols-i*np.ones(len(rows)).astype(int)
-        colsplus = cols+i*np.ones(len(rows)).astype(int)
-        image[rowsmin,cols,:] = [255,0,0]
-        image[rowsplus,cols,:] = [255,0,0]
-        image[rows,colsmin,:] = [255,0,0]
-        image[rows,colsplus,:] = [255,0,0]
+    try:
+        for i in range(7):
+            rowsmin = rows-i*np.ones(len(rows)).astype(int)
+            rowsplus = rows+i*np.ones(len(rows)).astype(int)
+            colsmin = cols-i*np.ones(len(rows)).astype(int)
+            colsplus = cols+i*np.ones(len(rows)).astype(int)
+            image[rowsmin,cols,:] = [255,0,0]
+            image[rowsplus,cols,:] = [255,0,0]
+            image[rows,colsmin,:] = [255,0,0]
+            image[rows,colsplus,:] = [255,0,0]
+    except:
+        print("Corner markers (red crosses) out of bound of the image")
 
     return image
 
-def updateCorners(rows,cols,window_size):
-    rows = rows + np.ones(len(rows)).astype(int)
-    cols = cols + np.ones(len(cols)).astype(int)
+def updateCorners(rows,cols,flows,image_size,window_size):
+    for i in range(len(rows)):
+        windowindex = findWindowIndex(rows[i],cols[i],window_size,image_size)
+        rows[i] = rows[i] + flows[windowindex][0]
+        cols[i] = cols[i] + flows[windowindex][1]
 
     return rows, cols
+
+def findWindowIndex(row,col,window_size,image_size):
+    windowcol = int(col/window_size)
+    windowrow = int(row/window_size)
+    totalrows = int(image_size[0]/window_size)
+    windowindex = windowrow + totalrows*windowcol
+
+    return windowindex
 
 fig = plt.figure()
 
@@ -59,10 +72,6 @@ for filename in filesfolder:
     imagesgray.append(imggray)
 
 
-
-
-
-
 imagesplt_persontoy = []
 
 #create starting point: find corners in frame 1 and mark them
@@ -71,10 +80,12 @@ firstframe = tagCorners(imagesRGB[0],rows,cols)
 imgplt = plt.imshow(firstframe)
 imagesplt_persontoy.append([imgplt])
 
-for i in range(len(imagesgray)-80):
+for i in range(len(imagesgray)-100):
     print(i)
-    flows = lucas_kanade(imagesgray[i],imagesgray[i+1],window_size=50)
-    rows, cols = updateCorners(rows,cols,window_size=50)
+    flows = lucas_kanade(imagesgray[i],imagesgray[i+1],window_size=100)
+    rows, cols = updateCorners(rows,cols,flows,imagesgray[i].shape,window_size=100)
+    print(rows)
+    print(cols)
     imagesplt_persontoy.append([plt.imshow(tagCorners(imagesRGB[i+1],rows,cols))])
 
 
@@ -88,10 +99,6 @@ ani_persontoy = animation.ArtistAnimation(fig, imagesplt_persontoy, interval=100
 #                                 repeat_delay=1000)
 
 plt.show()
-
-
-print(lucas_kanade(imagesgray[0],imagesgray[1],window_size=5).shape)
-print(imagesgray[0].shape)
 
 #IF YOU WANT TO SAVE ANIMATIONS TO GIF, PLEASE UNCOMMENT CODE BELOW
 ani_persontoy.save('persontoy.gif', fps=30)
