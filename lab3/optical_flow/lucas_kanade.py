@@ -96,13 +96,6 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
     win_per_row = int(np.sqrt(flows.shape[0]))
 
 
-    # by default an arrow in [1,1] direction will point to the upper right in plt.quiver
-    # Our implementation yields arrows that presume to point to the lower right 
-    # so we have to rotate clockwise by 90 degrees, which we achieve with a 
-    # rotation matrix R
-    R = np.array([[0,1], [-1,0]])
-    flows = np.einsum('ik,jk',flows,R)
-
     if coarse:
         # get meshgrid for arrow locations
         X, Y = np.meshgrid(np.arange(win_per_row), np.arange(win_per_col))
@@ -152,7 +145,7 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
     plt.figure()
     plt.gca().invert_yaxis() # put origin in top left corner. Does not affect the direction of arrows unless angles='xy'
     colors = colormap(norm(angles)).reshape((-1, 4))
-    q = plt.quiver(X, Y, U, V, angles='uv', scale_units='xy', color=colors, **quiver_kwargs)
+    q = plt.quiver(X, Y, U, V, angles='xy', scale_units='xy', color=colors, **quiver_kwargs)
     plt.clim(-np.pi,np.pi)
     plt.set_cmap('inferno')
     plt.colorbar()
