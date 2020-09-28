@@ -5,10 +5,12 @@ import matplotlib.animation as animation
 from harris_corner_detector import harris_corner_detection
 import numpy as np
 from PIL import Image
-
-######################
-# set parameters here:
-######################
+from lucas_kanade_copy import lucas_kanade
+import copy
+#
+# ######################
+# # set parameters here for Harris Corner Detector:
+# ######################
 # thresholds are different for each image
 threshold = 5000
 # size of the window to look for local maxima, must be odd
@@ -19,6 +21,26 @@ sigma_smooth = 3
 sigma_derivative = 1
 #######################
 
+def tagCorners(image,rows,cols):
+    """image is expected to be RGB. Red crosses will be placed on the coordinates given by rows and cols"""
+
+    for i in range(7):
+        rowsmin = rows-i*np.ones(len(rows)).astype(int)
+        rowsplus = rows+i*np.ones(len(rows)).astype(int)
+        colsmin = cols-i*np.ones(len(rows)).astype(int)
+        colsplus = cols+i*np.ones(len(rows)).astype(int)
+        image[rowsmin,cols,:] = [255,0,0]
+        image[rowsplus,cols,:] = [255,0,0]
+        image[rows,colsmin,:] = [255,0,0]
+        image[rows,colsplus,:] = [255,0,0]
+
+    return image
+
+def updateCorners(rows,cols,window_size):
+    rows = rows + np.ones(len(rows)).astype(int)
+    cols = cols + np.ones(len(cols)).astype(int)
+
+    return rows, cols
 
 fig = plt.figure()
 
@@ -26,60 +48,51 @@ folder = "person_toy"
 filesfolder = os.listdir(folder)
 filesfolder.sort()
 
-images = []
-
+#import images and convert to expected type and expected colorchannels
+imagesRGB = []
+imagesgray = []
 for filename in filesfolder:
-    #print(filename)
-    img = cv2.imread(os.path.join(folder,filename))
-    #convert BGR to RGB
-    img = img[:, :, ::-1]
-    img = plt.imshow(img, animated=True)
+    imgBGR = cv2.imread(os.path.join(folder,filename))
+    imgRGB = imgBGR[:, :, ::-1]
     imggray = np.asarray(Image.open(os.path.join(folder,filename)).convert("L")).astype(float)
-
-    H, rows, cols = harris_corner_detection(imggray, threshold, window_size, sigma_smooth, sigma_derivative)
-    #print("Number of corners:", len(rows))
-    plt.scatter(cols, rows, s=16, animated=True)
-    if img is not None:
-        images.append([img])
+    imagesRGB.append(imgRGB)
+    imagesgray.append(imggray)
 
 
-ani = animation.ArtistAnimation(fig, images, interval=20, blit=True,
-                                repeat_delay=1000)
 
-########################################################
-x = np.linspace(0,15,len(filesfolder))
 
-#fig = plt.figure()
-p1 = fig.add_subplot(111)
 
-# set up empty lines to be updates later on
-l1, = p1.plot([],[],'b')
-l2, = p1.plot([],[],'r')
 
-def gen1():
-    i = 0.5
-    while(True):
-        yield i
-        i += 0.1
+imagesplt_persontoy = []
 
-def gen2():
-    j = 0
-    while(True):
-        yield j
-        j += 1
+#create starting point: find corners in frame 1 and mark them
+H, rows, cols = harris_corner_detection(imagesgray[0], threshold, window_size, sigma_smooth, sigma_derivative)
+firstframe = tagCorners(imagesRGB[0],rows,cols)
+imgplt = plt.imshow(firstframe)
+imagesplt_persontoy.append([imgplt])
 
-def run1(c):
-    y = c*x
-    l1.set_data(x,y)
+for i in range(len(imagesgray)-80):
+    print(i)
+    flows = lucas_kanade(imagesgray[i],imagesgray[i+1],window_size=50)
+    rows, cols = updateCorners(rows,cols,window_size=50)
+    imagesplt_persontoy.append([plt.imshow(tagCorners(imagesRGB[i+1],rows,cols))])
 
-def run2(c):
-    y = c*x
-    l2.set_data(x,y)
 
-ani1 = animation.FuncAnimation(fig,run1,gen1,interval=20)
-ani2 = animation.FuncAnimation(fig,run2,gen2,interval=20)
-########################################################
+
+# imgplt = plt.imshow(imgRGB, animated=True)
+# imagesplt_persontoy.append([imgplt])
+print(len(imagesplt_persontoy))
+ani_persontoy = animation.ArtistAnimation(fig, imagesplt_persontoy, interval=100, blit=True,
+                                repeat_delay=100)
+# ani_pingpong = animation.ArtistAnimation(fig, imagesplt_pingpong, interval=500, blit=True,
+#                                 repeat_delay=1000)
 
 plt.show()
 
-ani.save('myAnimation.gif', fps=30)
+
+print(lucas_kanade(imagesgray[0],imagesgray[1],window_size=5).shape)
+print(imagesgray[0].shape)
+
+#IF YOU WANT TO SAVE ANIMATIONS TO GIF, PLEASE UNCOMMENT CODE BELOW
+ani_persontoy.save('persontoy.gif', fps=30)
+#ani_pingpong.save('pingpong.gif', fps=30)
