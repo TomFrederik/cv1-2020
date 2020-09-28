@@ -7,7 +7,11 @@ import scipy.signal as scs
 
 
 def lucas_kanade(img1, img2, window_size=15):
+    '''
+    performs the lucas kanade algorithm to determine the optical flow from img1 to img2
 
+    returns a column-major ordered list of flows for every region
+    '''
     assert img1.shape == img2.shape, 'Images are not the same shape but {} and {}'.format(img1.shape, img2.shape)
 
     # for numerical stability of matrix inverse
@@ -31,7 +35,7 @@ def lucas_kanade(img1, img2, window_size=15):
 
     # compute derivatives before splitting into regions to have less 
     # errors from boundaries
-    # assume that they are the roughly same for both images
+    # assume that the derivatives are the roughly same for both images
     x_kernel = np.array([[1, 0, -1], [2,0,-2], [1,0,-1]])
     y_kernel = np.array([[1, 0, -1], [2,0,-2], [1,0,-1]]).T
 
@@ -49,16 +53,6 @@ def lucas_kanade(img1, img2, window_size=15):
     
     I_t = img2 - img1
 
-    # inspect derivatives
-    '''
-    plt.figure()
-    plt.imshow(I_x[:,:,1])
-    plt.show()
-
-    plt.figure()
-    plt.imshow(I_y[:,:,1])
-    plt.show()
-    '''
     for y in y_idcs:
         for x in x_idcs:
             # get region
@@ -90,6 +84,12 @@ def lucas_kanade(img1, img2, window_size=15):
 
 
 def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pdf', quiver_kwargs={}, plot_title=''):
+
+    '''
+    used for plotting optical flows
+
+    coarse determines whether to plot one arrow per region or one arrow per pixel
+    '''
 
     # get number of windows per column and row
     win_per_col = int(np.sqrt(flows.shape[0]))
@@ -160,7 +160,9 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
 
 
 def demo(coarse=True):
-
+    '''
+    computes optical flow for the example images and plots the results
+    '''
     # coarse determines whether we display a coarse or fine-grained plot
     # fine means that we set an arrow at every pixel
     # coarse means we set only one arrow for every window
