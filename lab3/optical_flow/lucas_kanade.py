@@ -10,6 +10,9 @@ def lucas_kanade(img1, img2, window_size=15):
 
     assert img1.shape == img2.shape, 'Images are not the same shape but {} and {}'.format(img1.shape, img2.shape)
 
+    # for numerical stability of matrix inverse
+    eps = 1e-10
+
     # compute how many rows and columns we have to drop
     drop_x = img1.shape[0] % window_size
     drop_y = img1.shape[0] % window_size
@@ -26,46 +29,57 @@ def lucas_kanade(img1, img2, window_size=15):
     # list to store flows
     flows = []
 
+    # compute derivatives before splitting into regions to have less 
+    # errors from boundaries
+    # assume that they are the roughly same for both images
+    x_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]])
+    y_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]]).T
+
+    I_x = np.zeros_like(img1)
+    I_y = np.zeros_like(img1)
+
+    if len(img1.shape) == 3:
+        for i in range(len(img1.shape)):
+            I_x[:,:,i] = scs.convolve2d(img1[:,:,i], x_kernel, 'same', 'symm')
+            I_y[:,:,i] = scs.convolve2d(img1[:,:,i], y_kernel, 'same', 'symm')
+
+    else:
+        I_x = scs.convolve2d(img1, x_kernel, 'same', 'symm')
+        I_y = scs.convolve2d(img1, y_kernel, 'same', 'symm')
+    
+    I_t = img2 - img1
+
+    # inspect derivatives
+    '''
+    plt.figure()
+    plt.imshow(I_x[:,:,1])
+    plt.show()
+
+    plt.figure()
+    plt.imshow(I_y[:,:,1])
+    plt.show()
+    '''
     for y in y_idcs:
         for x in x_idcs:
             # get region
             #print('Region from x={} to {} and y={} to {}'.format(x,x+window_size,y,y+window_size))
-            reg1 = img1[x:x+window_size,y:y+window_size]
-            reg2 = img2[x:x+window_size,y:y+window_size]
-
-            # compute x and y derivative
-            # assume that they are the roughly same for both images
-            x_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]])
-            y_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]]).T
-
-            I_x = np.zeros_like(reg1)
-            I_y = np.zeros_like(reg1)
-
-            if len(reg2.shape) == 3:
-                for i in range(len(reg2.shape)):
-                    I_x[:,:,i] = scs.convolve2d(reg1[:,:,i], x_kernel, 'same')
-                    I_y[:,:,i] = scs.convolve2d(reg1[:,:,i], y_kernel, 'same')
-
-            else:
-                I_x = scs.convolve2d(reg1, x_kernel, 'same')
-                I_y = scs.convolve2d(reg1, y_kernel, 'same')
+            reg_x = I_x[x:x+window_size,y:y+window_size]
+            reg_y = I_y[x:x+window_size,y:y+window_size]
+            reg_t = I_t[x:x+window_size,y:y+window_size]
             
-            
-            # compute time difference:
-            I_t = reg2 - reg1
-
             # flatten into vector
-            I_t = I_t.flatten()
-            I_x = I_x.flatten()
-            I_y = I_y.flatten()
+            reg_x = reg_x.flatten()
+            reg_y = reg_y.flatten()
+            reg_t = reg_t.flatten()
 
             # compute A and b
-            A = np.concatenate((I_x[:,None], I_y[:,None]), axis=1)
+            A = np.concatenate((reg_x[:,None], reg_y[:,None]), axis=1)
             #print('A.shape = ', A.shape)
-            b = -1 * I_t
+            #print('A^TA = ',A.T@A)
+            b = -1 * reg_t
 
             # compute pseudo-inverse
-            A_dagger = np.linalg.inv(A.T @ A) @ A.T
+            A_dagger = np.linalg.inv((A.T @ A) + eps*np.eye(2)) @ A.T
 
             # compute flow
             flow = A_dagger @ b
@@ -124,17 +138,23 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
     # compute colors
     # colors correspond to angle of arrow in radiants
     angles = np.arctan2(V,U)
+    
+    
+    #plt.figure()
+    #plt.hist(angles.flatten())
+    #plt.show()
 
-    #norm = mpl.colors.Normalize()
+    norm = mpl.colors.Normalize(vmin=-np.pi, vmax=np.pi)
     #norm.autoscale(colors)
-    colormap = mpl.cm.viridis
+    colormap = mpl.cm.inferno
 
     # plot results
     plt.figure()
     plt.gca().invert_yaxis() # put origin in top left corner. Does not affect the direction of arrows unless angles='xy'
-    colors = colormap(angles).reshape((-1, 4))
+    colors = colormap(norm(angles)).reshape((-1, 4))
     q = plt.quiver(X, Y, U, V, angles='uv', scale_units='xy', color=colors, **quiver_kwargs)
     plt.clim(-np.pi,np.pi)
+    plt.set_cmap('inferno')
     plt.colorbar()
     plt.title(plot_title)
     
@@ -143,6 +163,7 @@ def plot_flows(flows, coarse=True, window_size=15, result_file='./flow_quiver.pd
 
     else:
         plt.savefig('./results/fine_grained/'+result_file)
+    plt.close()
 
 
 def demo(coarse=True):
@@ -163,7 +184,7 @@ def demo(coarse=True):
     sphere_flows = lucas_kanade(img1, img2)
 
     # plot sphere flows
-    quiver_kwargs_sphere = {'scale':0.04, 'minlength':0.2, 'headwidth':3}
+    quiver_kwargs_sphere = {'scale':0.2, 'minlength':0.2, 'headwidth':3}
     plot_flows(sphere_flows, coarse=coarse, window_size=15, result_file='./sphere_flow.pdf', quiver_kwargs=quiver_kwargs_sphere, plot_title=r'Sphere - color $\leftrightarrow$ angle in radiants')
 
     #########
@@ -181,14 +202,14 @@ def demo(coarse=True):
     synth_flows = lucas_kanade(img1, img2)
 
     # plot synth flows
-    quiver_kwargs_synth = {'scale':0.01, 'minlength':0.2, 'headwidth':3}
+    quiver_kwargs_synth = {'scale':0.1, 'minlength':0.2, 'headwidth':3}
     plot_flows(synth_flows, coarse=coarse, window_size=15, result_file='./synth_flow.pdf', quiver_kwargs=quiver_kwargs_synth, plot_title=r'Synth - color $\leftrightarrow$ angle in radiants')
 
 
 if __name__ == "__main__":
 
     # compute for a coarse setting, i.e. one arrow per region
-    demo(True)
+    demo(coarse=True)
 
     #compute for a fine setting, i.e. one arrow per pixel
-    demo(False)
+    demo(coarse=False)
