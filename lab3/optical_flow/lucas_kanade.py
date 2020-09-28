@@ -32,8 +32,8 @@ def lucas_kanade(img1, img2, window_size=15):
     # compute derivatives before splitting into regions to have less 
     # errors from boundaries
     # assume that they are the roughly same for both images
-    x_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]])
-    y_kernel = np.array([[-1, 0, 1], [-2,0,2], [-1,0,1]]).T
+    x_kernel = np.array([[1, 0, -1], [2,0,-2], [1,0,-1]])
+    y_kernel = np.array([[1, 0, -1], [2,0,-2], [1,0,-1]]).T
 
     I_x = np.zeros_like(img1)
     I_y = np.zeros_like(img1)
