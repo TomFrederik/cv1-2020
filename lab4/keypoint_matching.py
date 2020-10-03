@@ -20,12 +20,12 @@ def compute_matches(img1, img2, threshold=0.75):
     sift = cv.xfeatures2d.SIFT_create()
     kp1, des1 = sift.detectAndCompute(img1, None)
     kp2, des2 = sift.detectAndCompute(img2, None)
-    
+
     # instantiate matcher object
     matcher = cv.BFMatcher_create()
     # get 2 best matches
     matches = matcher.knnMatch(des1, des2, k=2)
-    # apply ratio test -> reject keypoints for which the second best 
+    # apply ratio test -> reject keypoints for which the second best
     # match is not much worse than the best match, as explained by D.Lowe
     # in his paper
     good_matches = []
@@ -33,10 +33,10 @@ def compute_matches(img1, img2, threshold=0.75):
         if i.distance < threshold * j.distance:
             good_matches.append([i])
 
-    return kp1, des1, kp2, des2, good_matches    
+    return kp1, des1, kp2, des2, good_matches
 
 if __name__ == "__main__":
-    
+
     # specify paths
     boat1 = './boat1.pgm'
     boat2 = './boat2.pgm'

@@ -1,6 +1,8 @@
 import numpy as np
 import cv2 as cv
 from keypoint_matching import compute_matches
+from matplotlib import pyplot as plt
+import math
 
 def get_coords(query, train, matches):
     '''
@@ -22,7 +24,7 @@ def RANSAC(num_iters, coords_query, coords_train, num_points=10):
     Input:
         num_iters - number of iterations
         coords_query - coordinates of matched keypoints in query, shape is (num_matches, 2)
-        coords_target - coordinates of matched keypoints in target, shape is (num_matches, 2)
+        coords_train - coordinates of matched keypoints in target, shape is (num_matches, 2)
         num_points - int, number of points to find the LS solution
     Output:
         best_params - best found parameters for the affine trafo
@@ -45,10 +47,10 @@ def RANSAC(num_iters, coords_query, coords_train, num_points=10):
         b = np.zeros((2*num_points))
 
         for i, idx in enumerate(idcs):
-            b[i:i+2] = np.array(coords_train[idx])
-            A[i:i+2,:] = np.array([[*coords_query[idx][::-1],0,0,1,0],\
+            b[2*i:2*i+2] = np.array(coords_train[idx])
+            A[2*i:2*i+2,:] = np.array([[*coords_query[idx],0,0,1,0],\
                                    [0,0,*coords_query[idx],0,1]])
-        
+
 
         # find least squares solution to Ax=b, via pseudoinverse
         A_dagger = np.linalg.pinv(A)
@@ -59,7 +61,7 @@ def RANSAC(num_iters, coords_query, coords_train, num_points=10):
         bias = np.array([x[4], x[5]])
 
         trafo_out = (coords_query @ B.T) + bias[None,:]
-        
+
         # compute number of inliers
         abs_diff = np.sqrt(np.sum((trafo_out - coords_train)**2, axis=1))
         num_inliers = np.shape(abs_diff[abs_diff<=10])[0]
@@ -69,17 +71,44 @@ def RANSAC(num_iters, coords_query, coords_train, num_points=10):
             max_inliers = num_inliers
             best_params = x
             best_kp_idcs = np.array(idcs, dtype=np.int32)
-    
+
     return best_params, max_inliers, best_kp_idcs
 
 
-def warp(coords, trafo_params):
+def warp(img_orig, trafo_params):
     '''
     Applies an affine transformation for given parameters on a grid of coordinates
     and returns the transformed coordinates, rounded to the next integer
     '''
-    #TODO: implement
-    raise NotImplementedError
+    coords_orig = np.indices((img_orig.shape[0],img_orig.shape[1])).T
+    coords_orig = coords_orig.reshape(-1,2)
+
+    B = np.array([[trafo_params[0],trafo_params[1]], [trafo_params[2], trafo_params[3]]]) # trafo matritrafo_params
+    bias = np.array([trafo_params[4], trafo_params[5]])
+
+    transf_coord = np.array(np.around((coords_orig @ B.T) + bias[None,:]), dtype=np.int32)
+
+    #find minimum and maximum x and y values to be able to fit the warped image into a picture frame
+    min_x, max_x, min_y, max_y = math.inf, -math.inf, math.inf, -math.inf
+    for i in range(len(transf_coord)):
+        if transf_coord[i][0] < min_x:
+            min_x = transf_coord[i][0]
+        if transf_coord[i][0] > max_x:
+            max_x = transf_coord[i][0]
+        if transf_coord[i][1] < min_y:
+            min_y = transf_coord[i][1]
+        if transf_coord[i][1] > max_y:
+            max_y = transf_coord[i][1]
+
+    #offset the coords to have min_x value of 0 and min_y value of 0
+    for j in range(len(transf_coord)):
+        transf_coord[j][0] = transf_coord[j][0] - min_x
+        transf_coord[j][1] = transf_coord[j][1] - min_y
+
+    new_im = np.zeros((max_x-min_x+1,max_y-min_y+1,img_orig.shape[2]))
+    new_im[transf_coord[:,0], transf_coord[:,1], :] = img_orig[coords_orig[:,0], coords_orig[:,1],:]
+
+    return new_im.astype(int)
 
 def demo():
     '''
@@ -108,7 +137,7 @@ def demo():
     # if we compute as compute_matches(img1, img2), then
     # query is kp1
     # train is kp2
-    
+
     # extract all coordinates and put them into numpy arrays
     coords_query, coords_train = get_coords(kp_query, kp_train, matches)
 
@@ -133,18 +162,55 @@ def demo():
 
     # compute offset for plotting the images next to each other
     offset = np.array([int(img1.shape[1]),0], dtype=np.int32)
-
     # draw red lines between the best keypoints
     for i in range(best_kp.shape[0]):
         pt1 = tuple(best_kp[i])
         pt2 = tuple(trafo_out[i] + offset)
         cv.line(hstack_image, pt1, pt2, (0,0,255), 3)
-    
+
     cv.imwrite('./side_by_side.jpg',hstack_image)
 
-    # warp from image 1 to image 2, i.e. from query to train with our own function
-    #TODO
-    
+    ##use transformation parameters of img1 -> img2 to construct warped images
+
+    #own function
+    new_img1 = warp(img1,trafo_params)
+
+    #cv2 warpAffine
+    M = np.array([[trafo_params[3],trafo_params[2],trafo_params[5]], [trafo_params[1], trafo_params[0],trafo_params[4]]])
+    new_img1_cv = cv.warpAffine(img1,M,(img1.shape[1],img1.shape[0]))
+
+    ##use transformation parameters of img2 -> img1 to construct warped images
+
+    #compute parameters for img2 to img1
+    kp_query, _, kp_train, _, matches = compute_matches(gray2, gray1, threshold=0.5)
+    coords_query, coords_train = get_coords(kp_query, kp_train, matches)
+    trafo_params2, _, _ = RANSAC(N, coords_query, coords_train, num_points)
+
+    #own function
+    new_img2 = warp(img2,trafo_params2)
+
+    #cv2 warpAffine
+    M = np.array([[trafo_params2[3],trafo_params2[2],trafo_params2[5]], [trafo_params2[1], trafo_params2[0],trafo_params2[4]]])
+    new_img2_cv = cv.warpAffine(img2,M,(img2.shape[1],img2.shape[0]))
+
+    #visualize all warped images
+    fig=plt.figure()
+    plt.subplot(2, 2, 1)
+    plt.imshow(new_img1,vmin=0,vmax=255)
+    plt.title('Own function (img1 -> img2)')
+    plt.subplot(2, 2, 2)
+    plt.imshow(new_img1_cv,vmin=0,vmax=255)
+    plt.title('warpAffine (img1 -> img2)')
+    plt.subplot(2, 2, 3)
+    plt.imshow(new_img2,vmin=0,vmax=255)
+    plt.title('Own function (img2 -> img1)')
+    plt.subplot(2, 2, 4)
+    plt.imshow(new_img2_cv,vmin=0,vmax=255)
+    plt.title('warpAffine (img2 -> img1)')
+    plt.show()
+
+
+
     # warp using cv.warpAffine
     #TODO
 
@@ -152,5 +218,5 @@ def demo():
 
 
 if __name__ == "__main__":
-    
+
     demo()
