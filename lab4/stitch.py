@@ -32,7 +32,7 @@ def demo():
     # if we compute as compute_matches(img1, img2), then
     # query is kp1
     # train is kp2
-    
+
     # extract all coordinates and put them into numpy arrays
     coords_query, coords_train = get_coords(kp_query, kp_train, matches)
 
@@ -68,7 +68,18 @@ def demo():
     stitched_img /= 255
     # convert BGR to RGB
     stitched_img = stitched_img[:, :, ::-1]
+    img1 = img1[:, :, ::-1]
+    img2 = img2[:, :, ::-1]
+    fig=plt.figure()
+    plt.subplot(1, 3, 1)
+    plt.imshow(img2)
+    plt.title('left')
+    plt.subplot(1, 3, 2)
+    plt.imshow(img1)
+    plt.title('right')
+    plt.subplot(1, 3, 3)
     plt.imshow(stitched_img)
+    plt.title('stiched image')
     plt.show()
 
 

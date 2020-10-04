@@ -86,7 +86,7 @@ def warp(img_orig, trafo_params):
     B = np.array([[trafo_params[0],trafo_params[1]], [trafo_params[2], trafo_params[3]]]) # trafo matritrafo_params
     bias = np.array([trafo_params[4], trafo_params[5]])
 
-    transf_coord = np.array(np.around((coords_orig @ B.T) + bias[None,:]), dtype=np.int32)
+    transf_coord = np.array(np.around((coords_orig @ np.linalg.inv(B).T) - bias[None,:]), dtype=np.int32)
 
     #find minimum and maximum x and y values to be able to fit the warped image into a picture frame
     min_x, max_x, min_y, max_y = math.inf, -math.inf, math.inf, -math.inf
@@ -132,7 +132,7 @@ def demo():
     num_points = 10
 
     # compute matchings: query=boat1, target=boat2
-    kp_query, des1, kp_train, des2, matches = compute_matches(gray1, gray2, threshold=0.5)
+    kp_query, des1, kp_train, des2, matches = compute_matches(gray1, gray2, threshold=0.75)
 
     # if we compute as compute_matches(img1, img2), then
     # query is kp1
@@ -176,13 +176,23 @@ def demo():
     new_img1 = warp(img1,trafo_params)
 
     #cv2 warpAffine
-    M = np.array([[trafo_params[3],trafo_params[2],trafo_params[5]], [trafo_params[1], trafo_params[0],trafo_params[4]]])
-    new_img1_cv = cv.warpAffine(img1,M,(img1.shape[1],img1.shape[0]))
+    M = np.array([[trafo_params[0], trafo_params[1], trafo_params[4]],
+                    [trafo_params[2], trafo_params[3], trafo_params[5]]])
+    a, b, _ = img1.shape
+    corners = np.array([[0, 0, b, b], [0, a, 0, a]])
+    warped_corners = M[:, :2] @ corners + M[:, 2, None]
+    bottom = np.floor(np.max(warped_corners[1])).astype(int)
+    right = np.floor(np.max(warped_corners[0])).astype(int)
+    top = np.floor(np.min(warped_corners[1])).astype(int)
+    left = np.floor(np.min(warped_corners[0])).astype(int)
+    M[0,2] = M[0,2] - left
+    M[1,2] = M[1,2] - top
+    new_img1_cv = cv.warpAffine(img1,M,(right-left,bottom-top))
 
     ##use transformation parameters of img2 -> img1 to construct warped images
 
     #compute parameters for img2 to img1
-    kp_query, _, kp_train, _, matches = compute_matches(gray2, gray1, threshold=0.5)
+    kp_query, _, kp_train, _, matches = compute_matches(gray2, gray1, threshold=0.75)
     coords_query, coords_train = get_coords(kp_query, kp_train, matches)
     trafo_params2, _, _ = RANSAC(N, coords_query, coords_train, num_points)
 
@@ -190,33 +200,38 @@ def demo():
     new_img2 = warp(img2,trafo_params2)
 
     #cv2 warpAffine
-    M = np.array([[trafo_params2[3],trafo_params2[2],trafo_params2[5]], [trafo_params2[1], trafo_params2[0],trafo_params2[4]]])
-    new_img2_cv = cv.warpAffine(img2,M,(img2.shape[1],img2.shape[0]))
+    M = np.array([[trafo_params2[0], trafo_params2[1], trafo_params2[4]],
+                    [trafo_params2[2], trafo_params2[3], trafo_params2[5]]])
+    a, b, _ = img2.shape
+    corners = np.array([[0, 0, b, b], [0, a, 0, a]])
+    warped_corners = M[:, :2] @ corners + M[:, 2, None]
+    bottom = np.floor(np.max(warped_corners[1])).astype(int)
+    right = np.floor(np.max(warped_corners[0])).astype(int)
+    top = np.floor(np.min(warped_corners[1])).astype(int)
+    left = np.floor(np.min(warped_corners[0])).astype(int)
+    M[0,2] = M[0,2] - left
+    M[1,2] = M[1,2] - top
+    new_img2_cv = cv.warpAffine(img2, M, (right - left, bottom - top))
 
     #visualize all warped images
     fig=plt.figure()
     plt.subplot(2, 2, 1)
     plt.imshow(new_img1,vmin=0,vmax=255)
+    plt.axis('off')
     plt.title('Own function (img1 -> img2)')
     plt.subplot(2, 2, 2)
     plt.imshow(new_img1_cv,vmin=0,vmax=255)
+    plt.axis('off')
     plt.title('warpAffine (img1 -> img2)')
     plt.subplot(2, 2, 3)
     plt.imshow(new_img2,vmin=0,vmax=255)
+    plt.axis('off')
     plt.title('Own function (img2 -> img1)')
     plt.subplot(2, 2, 4)
     plt.imshow(new_img2_cv,vmin=0,vmax=255)
+    plt.axis('off')
     plt.title('warpAffine (img2 -> img1)')
     plt.show()
 
-
-
-    # warp using cv.warpAffine
-    #TODO
-
-
-
-
 if __name__ == "__main__":
-
     demo()
