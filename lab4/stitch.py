@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 from keypoint_matching import compute_matches
 from RANSAC import *
-
+import matplotlib.pyplot as plt
 
 
 def demo():
@@ -17,8 +17,8 @@ def demo():
     # load images
     img1 = cv.imread(path1)
     img2 = cv.imread(path2)
-    gray1= cv.cvtColor(img1,cv.COLOR_BGR2GRAY)
-    gray2= cv.cvtColor(img2,cv.COLOR_BGR2GRAY)
+    gray1= cv.cvtColor(img1, cv.COLOR_BGR2GRAY)
+    gray2= cv.cvtColor(img2, cv.COLOR_BGR2GRAY)
 
     # num iterations for RANSAC
     N = 100
@@ -43,15 +43,34 @@ def demo():
     # find the corners of the transformed query (right) image
     # cv2.warpAffine takes a 2x3 matrix, where the last column is the bias
     M = np.array([[trafo_params[0], trafo_params[1], trafo_params[4]], [trafo_params[2], trafo_params[3], trafo_params[5]]])
-    trafo_query = cv.warpAffine(img1, M, (img1.shape[1],img1.shape[0])) # this gives a cropped image, if you make the out_dim twice as big it fits in, but there might be a better way..
-    
-    #cv.imshow('Right warped',trafo_query)
-    #cv.waitKey(0)
+
+    a, b, _ = img1.shape
+    corners = np.array([[0, 0, b, b], [0, a, 0, a]])
+    warped_corners = M[:, :2] @ corners + M[:, 2, None]
+
+    bottom = np.floor(np.max(warped_corners[1])).astype(int)
+    right = np.floor(np.max(warped_corners[0])).astype(int)
+
+    trafo_query = cv.warpAffine(img1, M, (right, bottom))
+
     cv.imwrite('warped_right.jpg', trafo_query)
-    
-    
-    
+
+    bottom = max(bottom, img2.shape[0])
+    right = max(right, img2.shape[1])
+
+    # How do we find the new size?
+    # This takes the smallest rectangle that contains everything
+    new_size = (bottom, right, 3)
+
+    stitched_img = np.zeros(new_size)
+    stitched_img[:trafo_query.shape[0], :trafo_query.shape[1], :] = trafo_query
+    stitched_img[:img2.shape[0], :img2.shape[1], :] = img2
+    stitched_img /= 255
+    # convert BGR to RGB
+    stitched_img = stitched_img[:, :, ::-1]
+    plt.imshow(stitched_img)
+    plt.show()
+
 
 if __name__ == "__main__":
-    
     demo()
