@@ -77,15 +77,17 @@ def RANSAC(num_iters, coords_query, coords_train, num_points=10):
 
 def warp(img_orig, trafo_params):
     '''
-    Applies an affine transformation for given parameters on a grid of coordinates
-    and returns the transformed coordinates, rounded to the next integer
+    Applies an affine transformation for given parameters on an image
+    and returns the transformed image with integer datatype.
     '''
+    #first we create a grid to perform the coordinate wise transformation on
     coords_orig = np.indices((img_orig.shape[0],img_orig.shape[1])).T
     coords_orig = coords_orig.reshape(-1,2)
 
     B = np.array([[trafo_params[0],trafo_params[1]], [trafo_params[2], trafo_params[3]]]) # trafo matritrafo_params
     bias = np.array([trafo_params[4], trafo_params[5]])
 
+    #now we apply the transformation on the original grid
     transf_coord = np.array(np.around((coords_orig @ np.linalg.inv(B).T) - bias[None,:]), dtype=np.int32)
 
     #find minimum and maximum x and y values to be able to fit the warped image into a picture frame
@@ -214,23 +216,41 @@ def demo():
     new_img2_cv = cv.warpAffine(img2, M, (right - left, bottom - top))
 
     #visualize all warped images
-    fig=plt.figure()
+    fig=plt.figure(figsize=(30,30))
     plt.subplot(2, 2, 1)
+    plt.imshow(img1,vmin=0,vmax=255)
+    plt.axis('off')
+    plt.title('Original img1')
+    plt.subplot(2, 2, 2)
     plt.imshow(new_img1,vmin=0,vmax=255)
     plt.axis('off')
-    plt.title('Own function (img1 -> img2)')
+    plt.title('transformation (img1 -> img2) using own function')
+    plt.subplot(2, 2, 3)
+    plt.imshow(img2,vmin=0,vmax=255)
+    plt.axis('off')
+    plt.title('Original img2')
+    plt.subplot(2, 2, 4)
+    plt.imshow(new_img2,vmin=0,vmax=255)
+    plt.axis('off')
+    plt.title('transformation (img2 -> img1) using own function')
+
+    fig=plt.figure(figsize=(30,30))
+    plt.subplot(2, 2, 1)
+    plt.imshow(img1,vmin=0,vmax=255)
+    plt.axis('off')
+    plt.title('Original img1')
     plt.subplot(2, 2, 2)
     plt.imshow(new_img1_cv,vmin=0,vmax=255)
     plt.axis('off')
-    plt.title('warpAffine (img1 -> img2)')
+    plt.title('transformation (img1 -> img2) using warpAffine')
     plt.subplot(2, 2, 3)
-    plt.imshow(new_img2,vmin=0,vmax=255)
+    plt.imshow(img2,vmin=0,vmax=255)
     plt.axis('off')
-    plt.title('Own function (img2 -> img1)')
+    plt.title('Original img2')
     plt.subplot(2, 2, 4)
     plt.imshow(new_img2_cv,vmin=0,vmax=255)
     plt.axis('off')
-    plt.title('warpAffine (img2 -> img1)')
+    plt.title('transformation (img2 -> img1) using warpAffine')
     plt.show()
 
 if __name__ == "__main__":
