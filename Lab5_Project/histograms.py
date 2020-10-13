@@ -44,6 +44,8 @@ for i, folder in enumerate(class_dirs):
 
 
     # compute distance to clusters
+    # Becase the full array of pairwise distances takes about 10 GiB,
+    # we chunk the sum into several batches
     sum_len = sift_des.shape[-1]
     per_chunk = 10
     print("Number of chunks:", sum_len // per_chunk + 1)
