@@ -44,10 +44,18 @@ for i, folder in enumerate(class_dirs):
 
 
     # compute distance to clusters
-    distance = np.sum((sift_des[:,None,:] - dictionary[None,:]) ** 2, axis=-1)
+    sum_len = sift_des.shape[-1]
+    per_chunk = 10
+    print("Number of chunks:", sum_len // per_chunk + 1)
+
+    distance = np.empty((sift_des.shape[0], dictionary.shape[0]))
+    for l in range(sum_len // per_chunk + 1):
+        indices = slice(l * per_chunk, (l + 1) * per_chunk)
+        distance += np.sum((sift_des[:,None, indices] - dictionary[None,:, indices]) ** 2, axis=-1)
 
     # assign each datapoint to the min distance cluster
     cluster_assignments = np.argmin(distance, axis=-1)
+    np.save('./histogram_data/cluster_assignments_{}.npy'.format(i + 1), cluster_assignments)
 
     # plot hist
     plt.figure()
