@@ -134,7 +134,7 @@ def save_images(images, labels):
     i = 0
     for image in images:
         label = labels[i]
-        directory = './data/test/' + str(label) + '/'
+        directory = './data/part2/test/' + str(label) + '/'
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
@@ -155,10 +155,10 @@ if __name__ == "__main__":
         plot_image(image)
 
     # test to check if the whole dataset is read correctly
-    images = read_all_images(DATA_PATH)
+    images = read_all_images(DATA_TEST_PATH)
     print(images.shape)
 
-    labels = read_labels(LABEL_PATH)
+    labels = read_labels(LABEL_TEST_PATH)
     print(labels.shape)
 
     # save images to disk
